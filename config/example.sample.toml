@@ -1,0 +1,7 @@
+port = 8080
+
+[mysql]
+user = ""
+password = ""
+addr = "tcp(localhost:3306)"
+name = ""
