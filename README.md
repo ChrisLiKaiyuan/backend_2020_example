@@ -33,4 +33,4 @@ GET /student?id=
 后面改成`/student?id=`，按照学号查找，但是旧的也没删掉
 
 ## TODO
-- [ ] validator
+- [x] validator
