@@ -32,5 +32,7 @@ GET /student?id=
 <br>
 后面改成`/student?id=`，按照学号查找，但是旧的也没删掉
 
+要按照模板建配置文件，`example.toml`
+
 ## TODO
 - [x] validator
