@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 	_ "gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"net/http"
 	log "unknwon.dev/clog/v2"
 )
@@ -88,8 +89,8 @@ func GetStudentInfo(c *gin.Context) (int, int, interface{}) {
 		return http.StatusOK, 20000, outputModels
 	} else {
 		Student := new(StudentInfoModel)
-		DB.Where("staff_id = ?", staffID).Find(&Student)
-		if Student.StaffID == "" {
+		err := DB.Where("staff_id = ?", staffID).Find(&Student).Error
+		if err == gorm.ErrRecordNotFound {
 			log.Trace("id %s not found or deleted", staffID)
 			//c.JSON(http.StatusInternalServerError, ErrorReturn{
 			//	Code: 50000,
@@ -124,8 +125,8 @@ func UpdateStudentInfo(c *gin.Context) (int, int, interface{}) {
 		return http.StatusBadRequest, 40000, "id not provide"
 	}
 	Student := new(StudentInfoModel)
-	_ = DB.Where("staff_id = ?", staffID).Find(&Student)
-	if Student.StaffID == "" {
+	err := DB.Where("staff_id = ?", staffID).Find(&Student).Error
+	if err == gorm.ErrRecordNotFound {
 		log.Warn("id %s not found or deleted", staffID)
 		//c.JSON(http.StatusInternalServerError, ErrorReturn{
 		//	Code: 50000,
@@ -134,7 +135,7 @@ func UpdateStudentInfo(c *gin.Context) (int, int, interface{}) {
 		return http.StatusInternalServerError, 50000, fmt.Sprintf("id %s not found or deleted", staffID)
 	}
 	updateModel := new(UpdateModel)
-	err := c.ShouldBindJSON(updateModel)
+	err = c.ShouldBindJSON(updateModel)
 	log.Trace("id: %s body: %+v", staffID, updateModel)
 	if err != nil {
 		log.Warn("can't bind json")
@@ -192,8 +193,8 @@ func DeleteStudentInfo(c *gin.Context) (int, int, interface{}) {
 		return http.StatusBadRequest, 40000, "id not provide"
 	}
 	Student := new(StudentInfoModel)
-	_ = DB.Where("staff_id = ?", staffID).Find(&Student)
-	if Student.StaffID == "" {
+	err := DB.Where("staff_id = ?", staffID).Find(&Student).Error
+	if err == gorm.ErrRecordNotFound {
 		log.Warn("id %s not found or deleted", staffID)
 		//c.JSON(http.StatusInternalServerError, ErrorReturn{
 		//	Code: 50000,
@@ -202,7 +203,7 @@ func DeleteStudentInfo(c *gin.Context) (int, int, interface{}) {
 		return http.StatusInternalServerError, 50000, fmt.Sprintf("id %s not found or deleted", staffID)
 	}
 
-	err := DB.Delete(&StudentInfoModel{}, "staff_id = ?", staffID).Error
+	err = DB.Delete(&StudentInfoModel{}, "staff_id = ?", staffID).Error
 	if err != nil {
 		log.Warn("database wrong")
 		//c.JSON(http.StatusInternalServerError, ErrorReturn{
