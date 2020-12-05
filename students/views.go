@@ -19,10 +19,6 @@ func AddStudentInfo(c *gin.Context) (int, int, interface{}) {
 	log.Trace("body: %+v", createModel)
 	if err != nil {
 		log.Warn("can't bind json")
-		//c.JSON(http.StatusBadRequest, ErrorReturn{
-		//	Code: 40000,
-		//	Msg:  "can't bind json",
-		//})
 		return http.StatusBadRequest, 40000, "can't bind json"
 	}
 
@@ -31,16 +27,11 @@ func AddStudentInfo(c *gin.Context) (int, int, interface{}) {
 	err = validate.Struct(createModel)
 	if err != nil {
 		log.Warn("invalid data")
-		//c.JSON(http.StatusBadRequest, ErrorReturn{
-		//	Code: 40000,
-		//	Msg:  "invalid data",
-		//})
 		return http.StatusBadRequest, 40000, "invalid data"
 	}
 
 	// 插入数据库
-	student := new(StudentInfoModel)
-	student = &StudentInfoModel{
+	student := &StudentInfoModel{
 		//Model:     gorm.Model{},
 		StaffID:   createModel.StaffID,
 		StaffName: createModel.StaffName,
@@ -49,19 +40,10 @@ func AddStudentInfo(c *gin.Context) (int, int, interface{}) {
 	err = DB.Create(student).Error
 	if err != nil {
 		log.Warn("database wrong")
-		//c.JSON(http.StatusInternalServerError, ErrorReturn{
-		//	Code: 50000,
-		//	Msg:  "database wrong",
-		//})
 		return http.StatusInternalServerError, 50000, "database wrong"
 	}
 
 	log.Trace("%s created", student.StaffID)
-	//c.JSON(http.StatusOK, SuccessReturn{
-	//	Msg:   "success",
-	//	Data:  fmt.Sprintf("%s created", student.StaffID),
-	//	Error: 0,
-	//})
 	return http.StatusOK, 20000, fmt.Sprintf("%s created", student.StaffID)
 }
 
@@ -81,34 +63,23 @@ func GetStudentInfo(c *gin.Context) (int, int, interface{}) {
 		}
 
 		log.Trace("Queried all data")
-		//c.JSON(http.StatusOK, SuccessReturn{
-		//	Msg:   "success",
-		//	Data:  outputModels,
-		//	Error: 0,
-		//})
 		return http.StatusOK, 20000, outputModels
 	} else {
-		Student := new(StudentInfoModel)
-		err := DB.Where("staff_id = ?", staffID).Find(&Student).Error
+		student := StudentInfoModel{
+			StaffID: staffID,
+		}
+		err := DB.Where(&student).Take(&student).Error
+		fmt.Println(err)
 		if err == gorm.ErrRecordNotFound {
 			log.Trace("id %s not found or deleted", staffID)
-			//c.JSON(http.StatusInternalServerError, ErrorReturn{
-			//	Code: 50000,
-			//	Msg:  fmt.Sprintf("id %s not found or deleted", staffID),
-			//})
 			return http.StatusInternalServerError, 50000, fmt.Sprintf("id %s not found or deleted", staffID)
 		} else {
 			var outputModel = OutputModel{
-				StaffID:   Student.StaffID,
-				StaffName: Student.StaffName,
-				Phone:     Student.Phone,
+				StaffID:   student.StaffID,
+				StaffName: student.StaffName,
+				Phone:     student.Phone,
 			}
 			log.Trace("Queried data of id %s", staffID)
-			//c.JSON(http.StatusOK, SuccessReturn{
-			//	Msg:   "success",
-			//	Data:  outputModel,
-			//	Error: 0,
-			//})
 			return http.StatusOK, 20000, outputModel
 		}
 	}
@@ -118,20 +89,14 @@ func UpdateStudentInfo(c *gin.Context) (int, int, interface{}) {
 	staffID := c.Query("id")
 	if staffID == "" {
 		log.Warn("id not provide")
-		//c.JSON(http.StatusBadRequest, ErrorReturn{
-		//	Code: 40000,
-		//	Msg:  "id not provide",
-		//})
 		return http.StatusBadRequest, 40000, "id not provide"
 	}
-	Student := new(StudentInfoModel)
-	err := DB.Where("staff_id = ?", staffID).Find(&Student).Error
+	student := StudentInfoModel{
+		StaffID: staffID,
+	}
+	err := DB.Where(&student).Take(&student).Error
 	if err == gorm.ErrRecordNotFound {
 		log.Warn("id %s not found or deleted", staffID)
-		//c.JSON(http.StatusInternalServerError, ErrorReturn{
-		//	Code: 50000,
-		//	Msg:  fmt.Sprintf("id %s not found or deleted", staffID),
-		//})
 		return http.StatusInternalServerError, 50000, fmt.Sprintf("id %s not found or deleted", staffID)
 	}
 	updateModel := new(UpdateModel)
@@ -139,10 +104,6 @@ func UpdateStudentInfo(c *gin.Context) (int, int, interface{}) {
 	log.Trace("id: %s body: %+v", staffID, updateModel)
 	if err != nil {
 		log.Warn("can't bind json")
-		//c.JSON(http.StatusBadRequest, ErrorReturn{
-		//	Code: 40000,
-		//	Msg:  "can't bind json",
-		//})
 		return http.StatusBadRequest, 40000, "can't bind json'"
 	}
 	// check
@@ -150,34 +111,18 @@ func UpdateStudentInfo(c *gin.Context) (int, int, interface{}) {
 	err = validate.Struct(updateModel)
 	if err != nil {
 		log.Warn("invalid data")
-		//c.JSON(http.StatusBadRequest, ErrorReturn{
-		//	Code: 40000,
-		//	Msg:  "invalid data",
-		//})
 		return http.StatusBadRequest, 40000, "invalid data"
 	}
-	student := new(StudentInfoModel)
-	student = &StudentInfoModel{
+	student = StudentInfoModel{
 		StaffName: updateModel.StaffName,
 		Phone:     updateModel.Phone,
 	}
-	student.StaffName = updateModel.StaffName
-	student.Phone = updateModel.Phone
-	err = DB.Where("staff_id = ?", staffID).Model(&StudentInfoModel{}).Updates(&student).Error
+	err = DB.Where(student).Model(&StudentInfoModel{}).Updates(&student).Error
 	if err != nil {
 		log.Warn("database wrong")
-		//c.JSON(http.StatusInternalServerError, ErrorReturn{
-		//	Code: 50000,
-		//	Msg:  "database wrong",
-		//})
 		return http.StatusInternalServerError, 50000, "database wrong"
 	} else {
 		log.Trace("%s updated", staffID)
-		//c.JSON(http.StatusOK, SuccessReturn{
-		//	Msg:   "success",
-		//	Data:  fmt.Sprintf("%s updated", staffID),
-		//	Error: 0,
-		//})
 		return http.StatusOK, 20000, fmt.Sprintf("%s updated", staffID)
 	}
 }
@@ -186,38 +131,23 @@ func DeleteStudentInfo(c *gin.Context) (int, int, interface{}) {
 	staffID := c.Query("id")
 	if staffID == "" {
 		log.Warn("id not provide")
-		//c.JSON(http.StatusBadRequest, ErrorReturn{
-		//	Code: 40000,
-		//	Msg:  "id not provide",
-		//})
 		return http.StatusBadRequest, 40000, "id not provide"
 	}
-	Student := new(StudentInfoModel)
-	err := DB.Where("staff_id = ?", staffID).Find(&Student).Error
+	student := StudentInfoModel{
+		StaffID: staffID,
+	}
+	err := DB.Where(&student).Take(&student).Error
 	if err == gorm.ErrRecordNotFound {
 		log.Warn("id %s not found or deleted", staffID)
-		//c.JSON(http.StatusInternalServerError, ErrorReturn{
-		//	Code: 50000,
-		//	Msg:  fmt.Sprintf("id %s not found or deleted", staffID),
-		//})
 		return http.StatusInternalServerError, 50000, fmt.Sprintf("id %s not found or deleted", staffID)
 	}
 
-	err = DB.Delete(&StudentInfoModel{}, "staff_id = ?", staffID).Error
+	err = DB.Delete(&StudentInfoModel{}, &student).Error
 	if err != nil {
 		log.Warn("database wrong")
-		//c.JSON(http.StatusInternalServerError, ErrorReturn{
-		//	Code: 50000,
-		//	Msg:  "database wrong",
-		//})
 		return http.StatusInternalServerError, 50000, "database wrong"
 	} else {
 		log.Trace("%s deleted", staffID)
-		//c.JSON(http.StatusOK, SuccessReturn{
-		//	Msg:   "success",
-		//	Data:  fmt.Sprintf("%s deleted", staffID),
-		//	Error: 0,
-		//})
 		return http.StatusOK, 20000, fmt.Sprintf("%s deleted", staffID)
 	}
 }
