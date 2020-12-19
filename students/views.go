@@ -37,12 +37,14 @@ func AddStudentInfo(c *gin.Context) (int, int, interface{}) {
 		StaffName: createModel.StaffName,
 		Phone:     createModel.Phone,
 	}
-	err = DB.Create(student).Error
+	tx := DB.Begin()
+	err = tx.Create(student).Error
 	if err != nil {
+		tx.Rollback()
 		log.Warn("database wrong")
 		return http.StatusInternalServerError, 50000, "database wrong"
 	}
-
+	tx.Commit()
 	log.Trace("%s created", student.StaffID)
 	return http.StatusOK, 20000, fmt.Sprintf("%s created", student.StaffID)
 }
@@ -117,11 +119,14 @@ func UpdateStudentInfo(c *gin.Context) (int, int, interface{}) {
 		StaffName: updateModel.StaffName,
 		Phone:     updateModel.Phone,
 	}
-	err = DB.Where(student).Model(&StudentInfoModel{}).Updates(&student).Error
+	tx := DB.Begin()
+	err = tx.Where(student).Model(&StudentInfoModel{}).Updates(&student).Error
 	if err != nil {
+		tx.Rollback()
 		log.Warn("database wrong")
 		return http.StatusInternalServerError, 50000, "database wrong"
 	} else {
+		tx.Commit()
 		log.Trace("%s updated", staffID)
 		return http.StatusOK, 20000, fmt.Sprintf("%s updated", staffID)
 	}
@@ -141,12 +146,14 @@ func DeleteStudentInfo(c *gin.Context) (int, int, interface{}) {
 		log.Warn("id %s not found or deleted", staffID)
 		return http.StatusInternalServerError, 50000, fmt.Sprintf("id %s not found or deleted", staffID)
 	}
-
-	err = DB.Delete(&StudentInfoModel{}, &student).Error
+	tx := DB.Begin()
+	err = tx.Delete(&StudentInfoModel{}, &student).Error
 	if err != nil {
+		tx.Rollback()
 		log.Warn("database wrong")
 		return http.StatusInternalServerError, 50000, "database wrong"
 	} else {
+		tx.Commit()
 		log.Trace("%s deleted", staffID)
 		return http.StatusOK, 20000, fmt.Sprintf("%s deleted", staffID)
 	}
